@@ -7,11 +7,9 @@ import net.canarymod.api.world.UnknownWorldException;
 import net.canarymod.api.world.World;
 import net.canarymod.config.Configuration;
 import net.visualillusionsent.utils.PropertiesFile;
-import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 
-import java.io.DataOutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.text.SimpleDateFormat;
@@ -577,29 +575,24 @@ public class ToolBox {
 
         String uuid = null;
         try {
-            URL url = new URL("https://api.mojang.com/profiles/page/1");
+            URL url = new URL("https://api.mojang.com/users/profiles/minecraft/" + username);
             HttpURLConnection uc = (HttpURLConnection)url.openConnection();
             uc.setRequestMethod("POST");
             uc.setUseCaches(false);
             uc.setDefaultUseCaches(false);
-            uc.addRequestProperty("User-Agent", "Minecraft");
+            uc.addRequestProperty("User-Agent", "minecraft");
             uc.addRequestProperty("Cache-Control", "no-cache, no-store, must-revalidate");
             uc.addRequestProperty("Pragma", "no-cache");
             uc.setRequestProperty("Content-Type", "application/json");
-            uc.setDoOutput(true);
-            DataOutputStream wr = new DataOutputStream(uc.getOutputStream());
-            wr.writeBytes("[{\"name\":\"" + username + "\", \"agent\":\"Minecraft\"}]");
-            wr.flush();
-            wr.close();
 
             // Parse it
             String json = new Scanner(uc.getInputStream(), "UTF-8").useDelimiter("\\A").next();
             JSONParser parser = new JSONParser();
             Object obj = parser.parse(json);
-            uuid = (String)((JSONObject)((JSONArray)((JSONObject)obj).get("profiles")).get(0)).get("id");
+            uuid = (String)((JSONObject)obj).get("id");
         }
         catch (Exception ex) {
-            Canary.log.warn("Failed to translate Username into a UUID");
+            Canary.log.debug("Failed to translate Username into a UUID.");
             Canary.log.debug("Debugging Stacktrace of failed UUID lookup", ex);
         }
         if (uuid != null && !uuid.contains("-")) {
